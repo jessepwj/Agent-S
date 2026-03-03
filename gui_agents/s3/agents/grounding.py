@@ -237,19 +237,50 @@ class OSWorldACI(ACI):
             text_content=prompt, image_content=obs["screenshot"], put_text_last=True
         )
 
-        # Generate and parse coordinates
-        response = call_llm_safe(self.grounding_model)
-        print("RAW GROUNDING MODEL RESPONSE:", response)
-        # Support both normalized floats (0.0-1.0) and absolute pixel integers
+        # Generate and parse coordinates.
+        # Three formats observed across different grounding models:
+        #   1. Normalized float  0.0-1.0  e.g. "(0.467, 0.978)"  → kimi-k2.5
+        #   2. Normalized int    0-1000   e.g. "[467, 976]"       → qwen3.5-plus
+        #   3. Absolute pixel    >1000    e.g. "1234 567"         → UI-TARS (1920×1080)
+        for attempt in range(2):
+            response = call_llm_safe(self.grounding_model)
+            print("RAW GROUNDING MODEL RESPONSE:", response)
+            # If the response is long reasoning text (>120 chars) with no clear
+            # coordinate pattern, retry with a more direct prompt.
+            nums_found = re.findall(r"\d+\.?\d*", response)
+            if len(nums_found) < 2 or (len(response) > 120 and len(nums_found) < 4):
+                if attempt == 0:
+                    print("GROUNDING: response looks like reasoning text, retrying...")
+                    self.grounding_model.reset()
+                    retry_prompt = (
+                        f"Query:{ref_expr}\n"
+                        "Reply with ONLY two numbers separated by a comma, "
+                        "representing the x and y coordinate. No other text."
+                    )
+                    self.grounding_model.add_message(
+                        text_content=retry_prompt,
+                        image_content=obs["screenshot"],
+                        put_text_last=True,
+                    )
+                    continue
+            break
+
+        # Format 1: floats in 0.0-1.0 range
         floats = re.findall(r"\d+\.\d+", response)
         if len(floats) >= 2:
             fx, fy = float(floats[0]), float(floats[1])
             if 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0:
                 return [int(fx * self.width), int(fy * self.height)]
             return [int(fx), int(fy)]
+        # Format 2 & 3: integers
         numericals = re.findall(r"\d+", response)
         assert len(numericals) >= 2
-        return [int(numericals[0]), int(numericals[1])]
+        ix, iy = int(numericals[0]), int(numericals[1])
+        # Format 2: both values ≤ 1000 → treat as 0-1000 normalized
+        if ix <= 1000 and iy <= 1000:
+            return [int(ix * self.width / 1000), int(iy * self.height / 1000)]
+        # Format 3: absolute pixels (at least one value > 1000)
+        return [ix, iy]
 
     # Calls pytesseract to generate word level bounding boxes for text grounding
     def get_ocr_elements(self, b64_image_data: str) -> Tuple[str, List]:
