@@ -721,3 +721,480 @@ gui_agents/s3/agents/grounding.py
 | `d9ced0a` | 修复 0-1000 整数坐标（qwen）+ 推理文字重试机制 |
 | `6449841` | 新增 DirectACI 单模型直出模式（--direct 参数） |
 | `c681b7e` | 修复 DirectACI 坐标归一化（_px() 方法） |
+| `560190e` | 文档扩充，完整操作手册 |
+
+---
+
+## 13 S3 代码架构深度梳理
+
+> 我们用的是 S3 版本。这一节从源码层面详细说明 S3 的每个模块是什么、为什么这么设计，以及各模块之间如何协作。
+
+### 13.1 S3 的核心设计思想
+
+S3 相比 S1/S2 最大的改变是**去掉层级结构**。
+
+S1/S2 有 Master Agent → Specialist Agent 两层：Master 分解任务，Specialist 执行子任务，每步需要多次 LLM 调用。S3 直接用一个 Worker 处理所有事情，**推理速度更快，API 花费更少**，同时在基准测试上反而表现更好（72.60%，首次超越人类）。
+
+```
+S1/S2 架构（多层）:              S3 架构（扁平）:
+  Master Agent                    Worker Agent
+    ↓ 分解任务                      ↓ 直接决策
+  Specialist Agent                 ACI (动作执行)
+    ↓ 执行                          ↓
+  ACI                            pyautogui
+```
+
+### 13.2 目录结构与文件职责
+
+```
+gui_agents/s3/
+│
+├── cli_app.py                  # CLI 入口，截图主循环
+│
+├── agents/
+│   ├── agent_s.py              # AgentS3：顶层编排，只有 3 行真正的逻辑
+│   ├── worker.py               # Worker：核心推理，决定下一步做什么
+│   ├── grounding.py            # ACI/OSWorldACI/DirectACI：把决策翻译成鼠标键盘代码
+│   └── code_agent.py           # CodeAgent：执行 Python/Bash 代码的子 agent
+│
+├── core/
+│   ├── module.py               # BaseModule：所有 agent 组件的基类
+│   ├── mllm.py                 # LMMAgent：统一 LLM 调用封装
+│   └── engine.py               # 各 provider 的底层 API 客户端
+│
+├── memory/
+│   └── procedural_memory.py    # 所有系统提示词（静态常量 + 动态生成）
+│
+├── utils/
+│   ├── common_utils.py         # LLM 调用工具（重试、格式化、代码解析）
+│   ├── formatters.py           # 格式校验器（验证模型输出格式合法）
+│   └── local_env.py            # 本地代码执行沙箱
+│
+└── bbon/
+    ├── behavior_narrator.py    # 给截图标注动作轨迹（用于 bBoN）
+    └── comparative_judge.py    # 比较多条轨迹，选最优（用于 bBoN）
+```
+
+### 13.3 完整执行流程（代码级）
+
+一个任务步骤的完整调用链：
+
+```
+cli_app.py: run_agent()
+│
+│  1. 截图
+│     screenshot = pyautogui.screenshot()
+│     obs["screenshot"] = screenshot_bytes
+│
+│  2. 调用 agent
+│     info, code = agent.predict(instruction, obs)
+│
+├─> agent_s.py: AgentS3.predict()
+│       executor_info, actions = self.executor.generate_next_action(instruction, obs)
+│       # executor 就是 Worker 实例
+│
+├─> worker.py: Worker.generate_next_action()
+│   │
+│   │  a. 把截图和任务绑定到 ACI
+│   │     self.grounding_agent.assign_screenshot(obs)
+│   │
+│   │  b. 可选：调用反思模型
+│   │     reflection = self._generate_reflection(instruction, obs)
+│   │
+│   │  c. 拼装 generator_message（反思文字 + 知识库 + 上一步code结果）
+│   │
+│   │  d. 调用主模型（带格式校验，最多重试3次）
+│   │     plan = call_llm_formatted(self.generator_agent, format_checkers)
+│   │     # 模型输出示例：
+│   │     # (Screenshot Analysis) 当前屏幕显示微信界面...
+│   │     # (Next Action) 点击搜索框输入联系人名称
+│   │     # (Grounded Action)
+│   │     # ```python
+│   │     # agent.click(0.227, 0.106)
+│   │     # ```
+│   │
+│   │  e. 解析代码块
+│   │     plan_code = parse_code_from_string(plan)
+│   │     # 提取到: "agent.click(0.227, 0.106)"
+│   │
+│   │  f. 执行代码，把抽象动作转成 pyautogui 代码
+│   │     exec_code = create_pyautogui_code(grounding_agent, plan_code, obs)
+│   │     # eval("agent.click(0.227, 0.106)") 触发 DirectACI.click(0.227, 0.106)
+│   │     # 返回: "import pyautogui; pyautogui.click(435, 114, clicks=1, button='left');"
+│   │
+│   └─> 返回 (executor_info, [exec_code])
+│
+│  3. 执行动作
+│     exec(code[0])
+│     # 真正移动鼠标、点击
+│
+└─> 下一步循环
+```
+
+### 13.4 agent_s.py — 顶层编排（最简单）
+
+```python
+class AgentS3(UIAgent):
+    def reset(self):
+        self.executor = Worker(...)   # 创建 Worker
+
+    def predict(self, instruction, observation):
+        executor_info, actions = self.executor.generate_next_action(
+            instruction=instruction, obs=observation
+        )
+        return info, actions
+```
+
+AgentS3 本身**只有 3 行逻辑**，它只是把 Worker 包装了一下，提供统一的 `predict()` 接口。真正的智能全在 Worker 里。
+
+S1/S2 的 `predict()` 里还有 Master Agent 分解任务的逻辑，S3 直接去掉了。
+
+### 13.5 worker.py — 核心推理（最重要）
+
+Worker 是整个系统智能的核心，负责：
+
+**维护两个 LMMAgent 实例**：
+
+| Agent | 用途 | 系统提示词 |
+|-------|------|-----------|
+| `generator_agent` | 生成下一步动作 | 由 `procedural_memory` 动态构建，包含所有可用方法签名 |
+| `reflection_agent` | 分析轨迹是否在循环卡住 | `REFLECTION_ON_TRAJECTORY` 常量 |
+
+**消息历史管理（flush_messages）**：
+
+```python
+def flush_messages(self):
+    if engine_type in ["anthropic", "openai", "gemini"]:
+        # 长上下文模型：保留全部文字，只保留最新 k 张截图
+        # （截图是大头，文字很小）
+        max_images = self.max_trajectory_length
+        for i in range(len(agent.messages) - 1, -1, -1):
+            if img_count > max_images:
+                del agent.messages[i]["content"][j]  # 删旧图
+    else:
+        # 短上下文模型（vLLM 等）：直接删整轮对话
+        if len(messages) > 2 * max_trajectory_length + 1:
+            messages.pop(1)
+            messages.pop(1)
+```
+
+这个设计很重要：**保留文字历史但丢弃旧截图**。截图占 Token 大头，文字（plan、reflection）则很小，这样可以让模型记住"做过什么"同时控制成本。
+
+**格式校验机制**：
+
+Worker 用 `call_llm_formatted()` 调用模型，同时传入两个格式校验器：
+
+```python
+format_checkers = [
+    SINGLE_ACTION_FORMATTER,    # 检查：只能有一个 agent.xxx() 调用
+    CODE_VALID_FORMATTER,       # 检查：agent.xxx() 能成功转成 pyautogui 代码
+]
+plan = call_llm_formatted(self.generator_agent, format_checkers)
+```
+
+如果格式不对，会把错误信息发回给模型，让它重新输出，最多重试 3 次。
+
+### 13.6 grounding.py — 动作层（设计最精妙）
+
+这个文件定义了"模型能做什么动作"，是系统的**接口定义层**。
+
+**@agent_action 装饰器**：
+
+```python
+def agent_action(func):
+    func.is_agent_action = True   # 打上标记
+    return func
+```
+
+只要给方法加这个装饰器，两件事自动发生：
+1. `procedural_memory.py` 会自动把这个方法的签名和 docstring 注入系统提示词
+2. 模型学会了调用它，`eval("agent.click(...)")` 就能执行
+
+**OSWorldACI（双模型模式）的 click 完整流程**：
+
+```python
+@agent_action
+def click(self, element_description: str, num_clicks=1, button_type="left", hold_keys=[]):
+    # 1. 调用 Grounding 模型，把描述转成坐标
+    coords = self.generate_coords(element_description, self.obs)
+    # 2. 坐标缩放（从 grounding 分辨率转到屏幕分辨率）
+    x, y = self.resize_coordinates(coords)
+    # 3. 拼装 pyautogui 代码字符串（注意：是返回字符串，不是直接执行！）
+    return f"import pyautogui; pyautogui.click({x}, {y}, clicks={num_clicks}, button={repr(button_type)})"
+```
+
+**注意关键点**：`click()` 方法**不执行**鼠标操作，它只返回一个 Python 代码字符串。真正的执行在 `cli_app.py` 里的 `exec(code[0])`。
+
+**DirectACI（单模型模式）的 click**：
+
+```python
+@agent_action
+def click(self, x: int, y: int, num_clicks=1, button_type="left", hold_keys=[]):
+    # _px() 自动处理三种坐标格式
+    px, py = self._px(x, y)
+    return f"import pyautogui; pyautogui.click({px}, {py}, ...)"
+```
+
+没有 Grounding 模型调用，省了一次 API。
+
+**所有可用动作一览**：
+
+| 动作 | OSWorldACI 参数 | DirectACI 参数 | 说明 |
+|------|----------------|----------------|------|
+| `click` | `element_description` | `x, y` | 鼠标点击 |
+| `type` | `element_description, text` | `x, y, text` | 输入文字（中文用剪贴板） |
+| `scroll` | `element_description, clicks` | `x, y, clicks` | 滚动 |
+| `drag_and_drop` | `start_desc, end_desc` | `start_x/y, end_x/y` | 拖拽 |
+| `highlight_text_span` | `start_phrase, end_phrase` | `x1/y1, x2/y2` | 文字选取 |
+| `hotkey` | `keys` | `keys` | 快捷键 |
+| `hold_and_press` | `hold_keys, press_keys` | 同左 | 组合按键 |
+| `open` | `app_or_filename` | 同左 | 打开应用/文件 |
+| `switch_applications` | `app_code` | 同左 | 切换应用 |
+| `save_to_knowledge` | `text` | 同左 | 存入知识库 |
+| `call_code_agent` | `task` | 同左 | 调用代码执行子 agent |
+| `wait` | `time` | 同左 | 等待 |
+| `done` | — | — | 任务完成 |
+| `fail` | — | — | 任务失败 |
+
+### 13.7 core/mllm.py — 统一 LLM 封装
+
+`LMMAgent` 是所有 LLM 调用的统一入口，屏蔽了不同 provider 的差异：
+
+```python
+class LMMAgent:
+    def __init__(self, engine_params, system_prompt=None):
+        # 根据 engine_type 自动选择 provider
+        engine_type = engine_params["engine_type"]
+        if engine_type == "openai":
+            self.engine = LMMEngineOpenAI(**engine_params)
+        elif engine_type == "anthropic":
+            self.engine = LMMEngineAnthropic(**engine_params)
+        # ... 8 种 provider
+
+        self.messages = []  # 对话历史
+        self.add_system_prompt(system_prompt)
+
+    def add_message(self, text_content, image_content=None, role="user"):
+        # 把截图（bytes）自动 Base64 编码后拼进消息
+        # 支持同一消息里放多张图
+
+    def get_response(self, temperature=0.0):
+        # 调用 engine.generate(self.messages)
+```
+
+**消息格式**（OpenAI 风格，所有 provider 统一）：
+
+```python
+self.messages = [
+    {
+        "role": "system",
+        "content": [{"type": "text", "text": "你是一个GUI操作专家...（含所有方法签名）"}]
+    },
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "The initial screen is provided..."},
+            {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}}
+        ]
+    },
+    {
+        "role": "assistant",
+        "content": [{"type": "text", "text": "(Screenshot Analysis)...\nagent.click(0.227, 0.106)"}]
+    },
+    # ... 每步追加一个 user（截图）+ assistant（动作）对
+]
+```
+
+### 13.8 core/engine.py — Provider 适配层
+
+每个 provider 实现 `generate(messages, temperature)` 方法：
+
+```python
+class LMMEngineOpenAI(LMMEngine):
+    @backoff.on_exception(backoff.expo, (APIConnectionError, RateLimitError), max_time=60)
+    def generate(self, messages, temperature=0.0):
+        return (
+            self.llm_client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temperature,
+            ).choices[0].message.content
+        )
+```
+
+`@backoff.on_exception` 装饰器实现**指数退避重试**：遇到连接错误或限流自动等待重试，最长等 60 秒。
+
+我们用的是 `LMMEngineOpenAI`（兼容接口），kimi-k2.5 和 qwen3.5-plus 都通过 `base_url` 指向阿里云百炼，用 OpenAI 格式调用。
+
+### 13.9 memory/procedural_memory.py — 系统提示词工厂
+
+这是理解整个系统的关键文件之一。Worker 的系统提示词**不是手写的**，而是由这个模块动态生成。
+
+**动态注入过程**：
+
+```python
+@staticmethod
+def construct_simple_worker_procedural_memory(agent_class, skipped_actions):
+    procedural_memory = """
+    你是 GUI 操作专家，负责执行任务 TASK_DESCRIPTION...
+    你可以使用以下方法：
+    class Agent:
+    """
+
+    # 反射：扫描 ACI 类的所有 @agent_action 方法
+    for attr_name in dir(agent_class):
+        attr = getattr(agent_class, attr_name)
+        if callable(attr) and hasattr(attr, "is_agent_action"):
+            signature = inspect.signature(attr)
+            procedural_memory += f"""
+    def {attr_name}{signature}:
+    '''{attr.__doc__}'''
+            """
+
+    procedural_memory += """
+    你的回复格式：
+    (Screenshot Analysis) 当前屏幕描述...
+    (Next Action) 下一步用自然语言描述...
+    (Grounded Action)
+    ```python
+    agent.click(...)  # 只能一个动作
+    ```
+    """
+    return procedural_memory
+```
+
+**效果对比**：
+
+```
+传给 OSWorldACI 时，模型看到:          传给 DirectACI 时，模型看到:
+def click(                              def click(
+    element_description: str,              x: int,
+    num_clicks: int = 1,                   y: int,
+    button_type: str = "left",             num_clicks: int = 1,
+    hold_keys: List = [],                  button_type: str = "left",
+):                                         hold_keys: List = [],
+'''Click on the element                ):
+Args:                                  '''Click at the specified pixel coordinate
+    element_description: a detailed    Args:
+    description...'''                      x: x pixel coordinate to click
+                                           y: y pixel coordinate to click'''
+```
+
+模型根据 docstring 的参数描述决定输出格式，所以我们改了签名就等于改了模型的行为，**不需要手动写提示词**。
+
+### 13.10 utils/common_utils.py — 执行粘合层
+
+几个关键函数：
+
+**`create_pyautogui_code(agent, code, obs)`**：
+
+```python
+def create_pyautogui_code(agent, code, obs):
+    agent.assign_screenshot(obs)  # 先把截图给 ACI
+    exec_code = eval(code)        # eval("agent.click(0.472, 0.978)") 触发 ACI.click()
+    return exec_code              # 返回 pyautogui 代码字符串
+```
+
+这是"把模型输出的 Python 表达式执行一遍"的地方。`eval()` 调用 ACI 的方法（可能触发 Grounding API），得到 pyautogui 字符串，之后再在 `cli_app.py` 里 `exec()` 真正执行。
+
+**`call_llm_formatted(generator, format_checkers)`**：
+
+```python
+def call_llm_formatted(generator, format_checkers):
+    for attempt in range(3):
+        response = call_llm_safe(generator)
+
+        # 检查格式
+        feedback_msgs = []
+        for checker in format_checkers:
+            success, feedback = checker(response)
+            if not success:
+                feedback_msgs.append(feedback)
+
+        if not feedback_msgs:
+            break  # 格式正确，退出
+
+        # 格式错误：把错误信息追加到对话，让模型重新回答
+        messages.append({"role": "assistant", "content": response})
+        messages.append({"role": "user", "content": f"格式错误：{feedback_msgs}"})
+```
+
+这是"自修复"机制：模型输出格式不对时，把错误告诉模型，模型自己改。
+
+### 13.11 utils/formatters.py — 格式校验器
+
+两个关键校验器，在 Worker 里用：
+
+```python
+# 校验 1：代码块里只能有一个 agent.xxx() 调用
+SINGLE_ACTION_FORMATTER = lambda response: (
+    len(extract_agent_functions(parse_code_from_string(response))) == 1,
+    "必须只有一个 agent action"
+)
+
+# 校验 2：这个 agent.xxx() 调用是合法的（能成功转成 pyautogui 代码）
+CODE_VALID_FORMATTER = lambda agent, obs, response: (
+    _attempt_code_creation(agent, parse_code_from_string(response), obs) is not None,
+    "agent action 必须是有效的方法调用"
+)
+```
+
+校验 2 的副作用：它会尝试调用 ACI 方法（对于 OSWorldACI 会触发 Grounding API），所以格式校验本身也做了 Grounding。
+
+### 13.12 code_agent.py — 代码执行子 Agent
+
+当 Worker 决定调用 `agent.call_code_agent()` 时，会启动 CodeAgent 执行复杂的代码任务（最多 20 步）：
+
+```
+Worker 调用 agent.call_code_agent("计算B列总和")
+    ↓
+CodeAgent.execute(task, screenshot, env_controller)
+    ↓ 循环（最多 20 步）
+    ├── 1. 调用 LLM：分析任务，输出 Python/Bash 代码
+    │   模型输出：
+    │   <thoughts> 需要找到B列数据范围... </thoughts>
+    │   <answer>
+    │   ```python
+    │   import openpyxl
+    │   wb = openpyxl.load_workbook('data.xlsx')
+    │   ...
+    │   ```
+    │   </answer>
+    │
+    ├── 2. 提取代码块
+    ├── 3. 执行：LocalController.run_python_script(code)
+    ├── 4. 把执行结果（stdout/stderr）发回给 LLM
+    └── 5. 检测 DONE/FAIL 或继续
+
+返回执行摘要给 Worker
+```
+
+CodeAgent 适合：电子表格操作、文件批处理、数据分析等纯代码能完成的任务。不适合：需要看界面、点击按钮的 GUI 任务。
+
+### 13.13 bbon/ — 最优轨迹选择（高级功能）
+
+bBoN（Behavior Best-of-N）是 S3 的高级功能：运行 N 条轨迹，选最好的那条。
+
+```
+运行轨迹 1 → 截图序列 1
+运行轨迹 2 → 截图序列 2
+运行轨迹 3 → 截图序列 3
+     ↓
+BehaviorNarrator: 给每个动作的前后截图配上文字说明
+     ↓
+ComparativeJudge: 用 VLM 比较三条轨迹的初始/最终截图，选最优
+```
+
+日常使用不需要 bBoN，它主要用于提高基准测试成绩。
+
+### 13.14 我们做的改动总结
+
+在原始 S3 之上，我们添加了：
+
+| 改动 | 文件 | 作用 |
+|------|------|------|
+| `DirectACI` 类 | `grounding.py` | 单模型模式，跳过 Grounding API |
+| `DirectACI._px()` | `grounding.py` | 自动识别三种坐标格式并转换 |
+| `--direct` CLI 参数 | `cli_app.py` | 启动时选择单/双模型模式 |
+| 修复 `generate_coords()` | `grounding.py` | 支持 kimi 浮点坐标、qwen 0-1000坐标 |
+| 添加重试机制 | `grounding.py` | kimi 输出推理文字时重问 |
