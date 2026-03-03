@@ -162,3 +162,9 @@ cython_debug/
 #.idea/
 logs/
 .DS_Store
+
+# Local dev/test scripts (may contain API keys)
+run_direct_task.py
+run_task_tmp.py
+*_local.py
+CLAUDE.md

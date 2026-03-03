@@ -55,11 +55,14 @@ else:
     print("[WARN] Cannot locate Agent-S root with DirectACI. Import may fail.", file=sys.stderr)
 
 # ---------------------------------------------------------------------------
-# Config — mirrors openclaw.json bailian provider
+# Config — read from environment variables
 # ---------------------------------------------------------------------------
-BASE_URL  = "https://coding.dashscope.aliyuncs.com/v1"
-API_KEY   = "REDACTED"
-DEFAULT_MODEL    = "kimi-k2.5"
+BASE_URL  = os.environ.get(
+    "OPENAI_BASE_URL",
+    "https://dashscope.aliyuncs.com/compatible-mode/v1",
+)
+API_KEY   = os.environ.get("OPENAI_API_KEY", "")
+DEFAULT_MODEL    = os.environ.get("CLAWAGENT_MODEL", "kimi-k2.5")
 DEFAULT_MAX_STEPS = 15
 
 LOG_FILE = Path(__file__).parent / "agent_s_last_run.log"
