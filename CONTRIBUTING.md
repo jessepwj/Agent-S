@@ -1,4 +1,4 @@
-# Contributing to AutoAct
+# Contributing to claw-ui-s
 
 Thank you for your interest in contributing. This document covers how to get set up, what to work on, and how to submit changes.
 

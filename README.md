@@ -1,4 +1,4 @@
-<h1 align="center">ClawAgent</h1>
+<h1 align="center">claw-ui-s</h1>
 
 <p align="center">
   <strong>OpenClaw 桌面自动化技能 &mdash; 单模型视觉推理 + 直接执行</strong><br>
@@ -27,7 +27,7 @@
 
 ### 这是什么
 
-ClawAgent 是基于 [Agent-S](https://github.com/simular-ai/Agent-S) S3 的社区扩展版本，核心贡献有两项：
+claw-ui-s 是基于 [Agent-S](https://github.com/simular-ai/Agent-S) S3 的社区扩展版本，核心贡献有两项：
 
 1. **OpenClaw 技能（`agent-s-cua`）** — 将桌面 GUI 自动化能力打包成 OpenClaw 平台的标准技能，让任何 OpenClaw Bot 都能操控桌面应用。
 
@@ -108,15 +108,15 @@ DirectACI 继承自原版 `OSWorldACI`，重写了所有含坐标的动作方法
 
 ### 上游项目
 
-ClawAgent 基于 [Agent-S](https://github.com/simular-ai/Agent-S)（Simular AI），S3 版本在 OSWorld 基准上以 72.60% 首次超越人类表现。
+claw-ui-s 基于 [Agent-S](https://github.com/simular-ai/Agent-S)（Simular AI），S3 版本在 OSWorld 基准上以 72.60% 首次超越人类表现。
 
 ---
 
 ## English
 
-### What is ClawAgent
+### What is claw-ui-s
 
-ClawAgent is a community-enhanced fork of [Agent-S](https://github.com/simular-ai/Agent-S) S3, adding two contributions:
+claw-ui-s is a community-enhanced fork of [Agent-S](https://github.com/simular-ai/Agent-S) S3, adding two contributions:
 
 1. **OpenClaw Skill (`agent-s-cua`)** — packages desktop GUI automation as a standard OpenClaw platform skill, enabling any OpenClaw bot to control desktop applications.
 

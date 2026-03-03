@@ -62,7 +62,7 @@ BASE_URL  = os.environ.get(
     "https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 API_KEY   = os.environ.get("OPENAI_API_KEY", "")
-DEFAULT_MODEL    = os.environ.get("CLAWAGENT_MODEL", "kimi-k2.5")
+DEFAULT_MODEL    = os.environ.get("CLAWUIS_MODEL", "kimi-k2.5")
 DEFAULT_MAX_STEPS = 15
 
 LOG_FILE = Path(__file__).parent / "agent_s_last_run.log"
