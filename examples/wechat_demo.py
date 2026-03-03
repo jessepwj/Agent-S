@@ -30,7 +30,7 @@ BASE_URL = os.environ.get(
     "https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
-MODEL = os.environ.get("AUTOACT_MODEL", "kimi-k2.5")
+MODEL = os.environ.get("CLAWUIS_MODEL", "kimi-k2.5")
 
 if not API_KEY:
     print("ERROR: Set the OPENAI_API_KEY environment variable before running.")

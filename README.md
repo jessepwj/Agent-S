@@ -43,7 +43,7 @@ DirectACI:  截图 --> kimi-k2.5 ----------------------------------------> 坐�
 **安装**
 
 ```bash
-git clone https://github.com/jessepwj/Agent-S
+git clone https://github.com/jessepwj/claw-ui-s
 cd Agent-S
 pip install -e .
 ```
@@ -125,7 +125,7 @@ claw-ui-s is a community-enhanced fork of [Agent-S](https://github.com/simular-a
 ### Quick Start
 
 ```bash
-git clone https://github.com/jessepwj/Agent-S
+git clone https://github.com/jessepwj/claw-ui-s
 cd Agent-S
 pip install -e .
 

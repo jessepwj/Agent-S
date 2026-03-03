@@ -24,7 +24,7 @@ Thank you for your interest in contributing. This document covers how to get set
 ### Setup
 
 ```bash
-git clone https://github.com/jessepwj/Agent-S
+git clone https://github.com/jessepwj/claw-ui-s
 cd Agent-S
 pip install -e ".[dev]"
 ```
@@ -50,7 +50,7 @@ Good first contributions:
 | macOS / Linux | Test and fix platform-specific behavior in `grounding.py` |
 | Error handling | Better error messages when model outputs malformed actions |
 
-Open issues are tracked in the [GitHub Issues](https://github.com/jessepwj/Agent-S/issues) tab.
+Open issues are tracked in the [GitHub Issues](https://github.com/jessepwj/claw-ui-s/issues) tab.
 
 ---
 

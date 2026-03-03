@@ -24,5 +24,5 @@ python examples/wechat_demo.py
 python examples/wechat_demo.py "Open Chrome and go to github.com"
 
 # Different model
-AUTOACT_MODEL=qwen-vl-max python examples/wechat_demo.py "Open Notepad"
+CLAWUIS_MODEL=qwen-vl-max python examples/wechat_demo.py "Open Notepad"
 ```
