@@ -1,0 +1,67 @@
+name: Bug Report
+description: Report unexpected behavior or errors
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+
+  - type: input
+    id: os
+    attributes:
+      label: OS and Python version
+      placeholder: "e.g. Windows 10, Python 3.11"
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model and mode
+      placeholder: "e.g. kimi-k2.5 with --direct, or gpt-4o with UI-TARS grounding"
+    validations:
+      required: true
+
+  - type: textarea
+    id: task
+    attributes:
+      label: Task instruction
+      description: The exact string you passed as the task
+      placeholder: "e.g. 打开微信，找到联系人'张三'，发送消息：你好"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include the full error output if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run command: agent_s --direct --model kimi-k2.5 --task "..."
+        2. At step N, the agent ...
+        3. Error appears: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste any relevant output from the terminal or from `logs/`
+      render: shell

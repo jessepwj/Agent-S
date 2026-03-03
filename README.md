@@ -1,365 +1,306 @@
 <h1 align="center">
-  <img src="images/agent_s.png" alt="Logo" style="vertical-align:middle" width="60"> Agent S:
-  <small>Use Computer Like a Human</small>
+  AutoAct
 </h1>
 
-<h2 align="center">🏆 Agent S3: First to Surpass Human Performance on OSWorld (72.60%)</h2>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s3">[S3 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2510.02250">[S3 Paper]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=VHr0a3UBsh4">[S3 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s2-technical-review">[S2 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2504.00906">[S2 Paper (COLM 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=wUGVQl7c0eg">[S2 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/agent-s">[S1 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2410.08164">[S1 Paper (ICLR 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=OBDE3Knte0g">[S1 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-<a href="https://trendshift.io/repositories/13151" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13151" alt="simular-ai%2FAgent-S | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<p align="center">
+  <strong>Single-model GUI automation &mdash; one model sees, reasons, and acts.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white" alt="Windows">
-  <img src="https://img.shields.io/badge/OS-macOS-black?logo=apple&logoColor=white" alt="macOS">
-  <img src="https://img.shields.io/badge/OS-Linux-yellow?logo=linux&logoColor=black" alt="Linux">
-  <a href="https://discord.gg/E2XfsK9fPV">
-    <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/E2XfsK9fPV?style=flat" alt="Discord">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://pepy.tech/projects/gui-agents">
-    <img src="https://static.pepy.tech/badge/gui-agents" alt="PyPI Downloads">
-  </a>
+  <img src="https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/model-kimi--k2.5%20%7C%20qwen3.5-orange" alt="Models">
+  <img src="https://img.shields.io/badge/OpenClaw-skill%20ready-purple" alt="OpenClaw">
 </p>
-
-<div align="center">
-  <!-- Keep these links. Translations will automatically update with the README. -->
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=de">Deutsch</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=es">Español</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=fr">français</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ja">日本語</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ko">한국어</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=pt">Português</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ru">Русский</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=zh">中文</a>
-</div>
-
-<div align="center">
-  &nbsp;&nbsp;
-<p>Skip the setup? Try Agent S in <a href="https://cloud.simular.ai/">Simular Cloud</a>
-</div>
-
-## 🥳 Updates
-- [x] **2025/12/15**: Agent S3 is the **first** to surpass human-level performance on OSWorld with an impressive score of **72.60%**!
-- [x] **2025/10/02**: Released Agent S3 and its [technical paper](https://arxiv.org/abs/2510.02250), setting a new SOTA of **69.9%** on OSWorld (approaching 72% human performance), with strong generalizability on WindowsAgentArena and AndroidWorld! It is also simpler, faster, and more flexible.
-- [x] **2025/08/01**: Agent S2.5 is released (gui-agents v0.2.5): simpler, better, and faster! New SOTA on [OSWorld-Verified](https://os-world.github.io)!
-- [x] **2025/07/07**: The [Agent S2 paper](https://arxiv.org/abs/2504.00906) is accepted to COLM 2025! See you in Montreal!
-- [x] **2025/04/27**: The Agent S paper won the Best Paper Award 🏆 at ICLR 2025 Agentic AI for Science Workshop!
-- [x] **2025/04/01**: Released the [Agent S2 paper](https://arxiv.org/abs/2504.00906) with new SOTA results on OSWorld, WindowsAgentArena, and AndroidWorld!
-- [x] **2025/03/12**: Released Agent S2 along with v0.2.0 of [gui-agents](https://github.com/simular-ai/Agent-S), the new state-of-the-art for computer use agents (CUA), outperforming OpenAI's CUA/Operator and Anthropic's Claude 3.7 Sonnet Computer-Use!
-- [x] **2025/01/22**: The [Agent S paper](https://arxiv.org/abs/2410.08164) is accepted to ICLR 2025!
-- [x] **2025/01/21**: Released v0.1.2 of [gui-agents](https://github.com/simular-ai/Agent-S) library, with support for Linux and Windows!
-- [x] **2024/12/05**: Released v0.1.0 of [gui-agents](https://github.com/simular-ai/Agent-S) library, allowing you to use Agent-S for Mac, OSWorld, and WindowsAgentArena with ease!
-- [x] **2024/10/10**: Released the [Agent S paper](https://arxiv.org/abs/2410.08164) and codebase!
-
-## Table of Contents
-
-1. [💡 Introduction](#-introduction)
-2. [🎯 Current Results](#-current-results)
-3. [🛠️ Installation & Setup](#%EF%B8%8F-installation--setup) 
-4. [🚀 Usage](#-usage)
-5. [🤝 Acknowledgements](#-acknowledgements)
-6. [💬 Citation](#-citation)
-
-## 💡 Introduction
-
-Welcome to **Agent S**, an open-source framework designed to enable autonomous interaction with computers through Agent-Computer Interface. Our mission is to build intelligent GUI agents that can learn from past experiences and perform complex tasks autonomously on your computer. 
-
-Whether you're interested in AI, automation, or contributing to cutting-edge agent-based systems, we're excited to have you here!
-
-## 🎯 Current Results
 
 <p align="center">
-  <img src="images/s3_results_new.png" alt="Agent S3 Results" width="700"/>
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#directaci-architecture">Architecture</a> &bull;
+  <a href="#openclaw-skill">OpenClaw Skill</a> &bull;
+  <a href="#models">Models</a> &bull;
+  <a href="#contributing">Contributing</a>
 </p>
 
-On OSWorld, Agent S3 alone reaches 66% in the 100-step setting, already exceeding the previous state of the art of 63.4% (GTA1 w/ GPT-5). With the addition of Behavior Best-of-N, performance climbs even higher to 72.6%, *surpassing* human-level performance on OSWorld (~72%)!
+---
 
-Agent S3 also demonstrates strong zero-shot generalization! On WindowsAgentArena, accuracy rises from 50.2% using only Agent S3 to 56.6% by selecting from 3 rollouts. Similarly on AndroidWorld, performance improves from 68.1% to 71.6%
+AutoAct is a community-enhanced fork of [Agent-S](https://github.com/simular-ai/Agent-S) (S3, SOTA 72.60% on OSWorld) that introduces two key contributions:
 
-## 🛠️ Installation & Setup
+1. **DirectACI** &mdash; a single-model execution mode where one multimodal LLM handles both visual reasoning *and* pixel-coordinate output, eliminating the need for a separate grounding model endpoint.
+2. **OpenClaw Skill** &mdash; a plug-and-play `agent-s-cua` skill for the [OpenClaw](https://openclaw.ai) platform, enabling desktop automation in one line.
 
-### Prerequisites
-- **Single Monitor**: Our agent is designed for single monitor screens
-- **Security**: The agent runs Python code to control your computer - use with care
-- **Supported Platforms**: Linux, Mac, and Windows
+**Why DirectACI?** The original Agent-S uses two models: a reasoning LLM that describes *what* to click, plus a separate grounding model that converts that description to pixel coordinates. DirectACI feeds the screenshot directly to one capable model (e.g. kimi-k2.5) and asks it to output coordinates immediately &mdash; fewer API calls, lower latency, simpler setup.
 
+```
+Standard mode:   Screenshot --> Reasoning LLM --> "click the Send button" --> Grounding API --> (x, y) --> pyautogui
+DirectACI mode:  Screenshot --> kimi-k2.5 -------------------------------------------------> (x, y) --> pyautogui
+```
 
-### Installation
-To install Agent S3 without cloning the repository, run
+---
+
+## Quick Start
+
+### Install
+
 ```bash
-pip install gui-agents
-```
-If you would like to test Agent S3 while making changes, clone the repository and install using
-```
+git clone https://github.com/jessepwj/Agent-S
+cd Agent-S
 pip install -e .
 ```
 
-Don't forget to also `brew install tesseract`! Pytesseract requires this extra installation to work.
-
-### API Configuration
-
-#### Option 1: Environment Variables
-Add to your `.bashrc` (Linux) or `.zshrc` (MacOS):
-```bash
-export OPENAI_API_KEY=<YOUR_API_KEY>
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
-export HF_TOKEN=<YOUR_HF_TOKEN>
-```
-
-#### Option 2: Python Script
-```python
-import os
-os.environ["OPENAI_API_KEY"] = "<YOUR_API_KEY>"
-```
-
-### Supported Models
-We support Azure OpenAI, Anthropic, Gemini, Open Router, and vLLM inference. See [models.md](models.md) for details.
-
-### Grounding Models (Required)
-For optimal performance, we recommend [UI-TARS-1.5-7B](https://huggingface.co/ByteDance-Seed/UI-TARS-1.5-7B) hosted on Hugging Face Inference Endpoints or another provider. See [Hugging Face Inference Endpoints](https://huggingface.co/learn/cookbook/en/enterprise_dedicated_endpoints) for setup instructions.
-
-## 🚀 Usage
-
-
-> ⚡️ **Recommended Setup:**  
-> For the best configuration, we recommend using **OpenAI gpt-5-2025-08-07** as the main model, paired with **UI-TARS-1.5-7B** for grounding.  
-
-
-### CLI
-
-Note, this is running Agent S3, our improved agent, without bBoN. 
-
-Run Agent S3 with the required parameters:
+### Run a task (DirectACI, single model)
 
 ```bash
+# Set your API key (DashScope / Alibaba Cloud)
+export OPENAI_API_KEY=sk-...
+
 agent_s \
-    --provider openai \
-    --model gpt-5-2025-08-07 \
-    --ground_provider huggingface \
-    --ground_url http://localhost:8080 \
-    --ground_model ui-tars-1.5-7b \
-    --grounding_width 1920 \
-    --grounding_height 1080
+  --provider openai \
+  --model kimi-k2.5 \
+  --model_url https://dashscope.aliyuncs.com/compatible-mode/v1 \
+  --direct \
+  --task "Open WeChat, find the contact named Zhang San, send message: hello"
 ```
 
-#### Local Coding Environment (Optional)
-For tasks that require code execution (e.g., data processing, file manipulation, system automation), you can enable the local coding environment:
+### Python API
 
-```bash
-agent_s \
-    --provider openai \
-    --model gpt-5-2025-08-07 \
-    --ground_provider huggingface \
-    --ground_url http://localhost:8080 \
-    --ground_model ui-tars-1.5-7b \
-    --grounding_width 1920 \
-    --grounding_height 1080 \
-    --enable_local_env
-```
-
-⚠️ **WARNING**: The local coding environment executes arbitrary Python and Bash code locally on your machine. Only use this feature in trusted environments and with trusted inputs.
-
-#### Required Parameters
-- **`--provider`**: Main generation model provider (e.g., openai, anthropic, etc.) - Default: "openai"
-- **`--model`**: Main generation model name (e.g., gpt-5-2025-08-07) - Default: "gpt-5-2025-08-07"
-- **`--ground_provider`**: The provider for the grounding model - **Required**
-- **`--ground_url`**: The URL of the grounding model - **Required**
-- **`--ground_model`**: The model name for the grounding model - **Required**
-- **`--grounding_width`**: Width of the output coordinate resolution from the grounding model - **Required**
-- **`--grounding_height`**: Height of the output coordinate resolution from the grounding model - **Required**
-
-#### Optional Parameters
-- **`--model_temperature`**: The temperature to fix all model calls to (necessary to set to 1.0 for models like o3 but can be left blank for other models)
-
-#### Grounding Model Dimensions
-The grounding width and height should match the output coordinate resolution of your grounding model:
-- **UI-TARS-1.5-7B**: Use `--grounding_width 1920 --grounding_height 1080`
-- **UI-TARS-72B**: Use `--grounding_width 1000 --grounding_height 1000`
-
-#### Optional Parameters
-- **`--model_url`**: Custom API URL for main generation model - Default: ""
-- **`--model_api_key`**: API key for main generation model - Default: ""
-- **`--ground_api_key`**: API key for grounding model endpoint - Default: ""
-- **`--max_trajectory_length`**: Maximum number of image turns to keep in trajectory - Default: 8
-- **`--enable_reflection`**: Enable reflection agent to assist the worker agent - Default: True
-- **`--enable_local_env`**: Enable local coding environment for code execution (WARNING: Executes arbitrary code locally) - Default: False
-
-#### Local Coding Environment Details
-The local coding environment enables Agent S3 to execute Python and Bash code directly on your machine. This is particularly useful for:
-
-- **Data Processing**: Manipulating spreadsheets, CSV files, or databases
-- **File Operations**: Bulk file processing, content extraction, or file organization
-- **System Automation**: Configuration changes, system setup, or automation scripts
-- **Code Development**: Writing, editing, or executing code files
-- **Text Processing**: Document manipulation, content editing, or formatting
-
-When enabled, the agent can use the `call_code_agent` action to execute code blocks for tasks that can be completed through programming rather than GUI interaction.
-
-**Requirements:**
-- **Python**: The same Python interpreter used to run Agent S3 (automatically detected)
-- **Bash**: Available at `/bin/bash` (standard on macOS and Linux)
-- **System Permissions**: The agent runs with the same permissions as the user executing it
-
-**Security Considerations:**
-- The local environment executes arbitrary code with the same permissions as the user running the agent
-- Only enable this feature in trusted environments
-- Be cautious when the agent generates code for system-level operations
-- Consider running in a sandboxed environment for untrusted tasks
-- Bash scripts are executed with a 30-second timeout to prevent hanging processes
-
-### `gui_agents` SDK
-
-First, we import the necessary modules. `AgentS3` is the main agent class for Agent S3. `OSWorldACI` is our grounding agent that translates agent actions into executable python code.
 ```python
 import pyautogui
-import io
 from gui_agents.s3.agents.agent_s import AgentS3
-from gui_agents.s3.agents.grounding import OSWorldACI
-from gui_agents.s3.utils.local_env import LocalEnv  # Optional: for local coding environment
+from gui_agents.s3.agents.grounding import DirectACI
 
-# Load in your API keys.
-from dotenv import load_dotenv
-load_dotenv()
-
-current_platform = "linux"  # "darwin", "windows"
-```
-
-Next, we define our engine parameters. `engine_params` is used for the main agent, and `engine_params_for_grounding` is for grounding. For `engine_params_for_grounding`, we support custom endpoints like HuggingFace TGI, vLLM, and Open Router.
-
-```python
 engine_params = {
-  "engine_type": provider,
-  "model": model,
-  "base_url": model_url,           # Optional
-  "api_key": model_api_key,        # Optional
-  "temperature": model_temperature # Optional
+    "engine_type": "openai",
+    "model": "kimi-k2.5",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key": "sk-...",
 }
 
-# Load the grounding engine from a custom endpoint
-ground_provider = "<your_ground_provider>"
-ground_url = "<your_ground_url>"
-ground_model = "<your_ground_model>"
-ground_api_key = "<your_ground_api_key>"
+w, h = pyautogui.size()
+grounding = DirectACI(env=None, platform="windows", engine_params=engine_params, width=w, height=h)
+agent = AgentS3(worker_engine_params=engine_params, grounding_agent=grounding, platform="windows")
 
-# Set grounding dimensions based on your model's output coordinate resolution
-# UI-TARS-1.5-7B: grounding_width=1920, grounding_height=1080
-# UI-TARS-72B: grounding_width=1000, grounding_height=1000
-grounding_width = 1920  # Width of output coordinate resolution
-grounding_height = 1080  # Height of output coordinate resolution
-
-engine_params_for_grounding = {
-  "engine_type": ground_provider,
-  "model": ground_model,
-  "base_url": ground_url,
-  "api_key": ground_api_key,  # Optional
-  "grounding_width": grounding_width,
-  "grounding_height": grounding_height,
-}
+agent.reset()
+info, code = agent.predict(
+    instruction="Open Chrome and go to github.com",
+    observation={"screenshot": open("screenshot.png", "rb").read()},
+)
+exec(code[0])
 ```
 
-Then, we define our grounding agent and Agent S3.
+---
+
+## DirectACI Architecture
+
+### How it works
+
+DirectACI is a subclass of `OSWorldACI` that overrides all coordinate-based action methods. Instead of accepting natural-language element descriptions (which are then resolved by a grounding API), DirectACI methods accept `(x, y)` pixel coordinates directly.
 
 ```python
-# Optional: Enable local coding environment
-enable_local_env = False  # Set to True to enable local code execution
-local_env = LocalEnv() if enable_local_env else None
+# Standard OSWorldACI signature — requires grounding model to resolve description
+def click(self, element_description: str, num_clicks: int = 1, button_type: str = "left"):
+    ...
 
-grounding_agent = OSWorldACI(
-    env=local_env,  # Pass local_env for code execution capability
-    platform=current_platform,
-    engine_params_for_generation=engine_params,
-    engine_params_for_grounding=engine_params_for_grounding,
-    width=1920,  # Optional: screen width
-    height=1080  # Optional: screen height
-)
-
-agent = AgentS3(
-    engine_params,
-    grounding_agent,
-    platform=current_platform,
-    max_trajectory_length=8,  # Optional: maximum image turns to keep
-    enable_reflection=True     # Optional: enable reflection agent
-)
+# DirectACI signature — model outputs coordinates directly from screenshot
+def click(self, x: int, y: int, num_clicks: int = 1, button_type: str = "left"):
+    ...
 ```
 
-Finally, let's query the agent!
+The system prompt is auto-generated from method signatures via `inspect.signature()` in `procedural_memory.py`. Changing the signature automatically teaches the model what format to output &mdash; no manual prompt engineering needed.
+
+### Coordinate normalization (`_px`)
+
+Different models output coordinates in different formats. DirectACI normalizes all three:
+
+| Format | Example | Used by |
+|--------|---------|---------|
+| Float 0&ndash;1 | `(0.472, 0.978)` | kimi-k2.5 |
+| Integer 0&ndash;1000 | `(472, 978)` | qwen3.5-plus |
+| Absolute pixels | `(906, 1057)` | UI-TARS, manual |
 
 ```python
-# Get screenshot.
-screenshot = pyautogui.screenshot()
-buffered = io.BytesIO() 
-screenshot.save(buffered, format="PNG")
-screenshot_bytes = buffered.getvalue()
-
-obs = {
-  "screenshot": screenshot_bytes,
-}
-
-instruction = "Close VS Code"
-info, action = agent.predict(instruction=instruction, observation=obs)
-
-exec(action[0])
+def _px(self, x, y):
+    x, y = float(x), float(y)
+    if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0:      # float 0-1 (kimi)
+        return int(x * self.width), int(y * self.height)
+    if x <= 1000 and y <= 1000:                    # int 0-1000 (qwen)
+        return int(x * self.width / 1000), int(y * self.height / 1000)
+    return int(x), int(y)                          # absolute pixels
 ```
 
-Refer to `gui_agents/s3/cli_app.py` for more details on how the inference loop works.
+### Available actions
 
-### OSWorld
+| Action | DirectACI signature |
+|--------|-------------------|
+| `click` | `click(x, y, num_clicks, button_type, hold_keys)` |
+| `type` | `type(x, y, text, overwrite)` |
+| `scroll` | `scroll(x, y, direction, amount)` |
+| `drag_and_drop` | `drag_and_drop(start_x, start_y, end_x, end_y)` |
+| `key_press` | `key_press(key)` |
+| `open_app` | `open_app(app_name)` |
+| `done` | `done()` |
+| `fail` | `fail(reason)` |
 
-To deploy Agent S3 in OSWorld, follow the [OSWorld Deployment instructions](osworld_setup/s3/OSWorld.md).
+---
 
-## 💬 Citations
+## OpenClaw Skill
 
-If you find this codebase useful, please cite:
+The `openclaw-skill/` directory contains a ready-to-deploy skill for the OpenClaw platform.
 
-```
-@misc{Agent-S3,
-      title={The Unreasonable Effectiveness of Scaling Agents for Computer Use}, 
-      author={Gonzalo Gonzalez-Pumariega and Vincent Tu and Chih-Lun Lee and Jiachen Yang and Ang Li and Xin Eric Wang},
-      year={2025},
-      eprint={2510.02250},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2510.02250}, 
-}
+### Install the skill
 
-@misc{Agent-S2,
-      title={Agent S2: A Compositional Generalist-Specialist Framework for Computer Use Agents}, 
-      author={Saaket Agashe and Kyle Wong and Vincent Tu and Jiachen Yang and Ang Li and Xin Eric Wang},
-      year={2025},
-      eprint={2504.00906},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2504.00906}, 
-}
+Copy `openclaw-skill/` to your OpenClaw skills directory and rename it `agent-s-cua`:
 
-@inproceedings{Agent-S,
-    title={{Agent S: An Open Agentic Framework that Uses Computers Like a Human}},
-    author={Saaket Agashe and Jiuzhou Han and Shuyu Gan and Jiachen Yang and Ang Li and Xin Eric Wang},
-    booktitle={International Conference on Learning Representations (ICLR)},
-    year={2025},
-    url={https://arxiv.org/abs/2410.08164}
-}
+```bash
+cp -r openclaw-skill/ /path/to/openclaw/skills/agent-s-cua
 ```
 
-## Star History
+### Invoke from OpenClaw
 
-[![Star History Chart](https://api.star-history.com/svg?repos=simular-ai/Agent-S&type=Date)](https://star-history.com/#simular-ai/Agent-S&Date)
+```
+@bot 打开微信，找到联系人"张三"，发送消息：在吗
+@bot Open Chrome and log in to github.com
+@bot Open Excel, create a sheet named "Sales", enter 1000 in A1
+```
+
+### Run directly
+
+```bash
+python -X utf8 openclaw-skill/scripts/run_agent_s.py "Open WeChat and send a message"
+python -X utf8 openclaw-skill/scripts/run_agent_s.py --max-steps 20 --model qwen3.5-plus "Fill the web form"
+```
+
+---
+
+## Models
+
+AutoAct works with any OpenAI-compatible multimodal API. Recommended options:
+
+| Model | Provider | API Endpoint | Best For |
+|-------|----------|-------------|---------|
+| `kimi-k2.5` | Moonshot / DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1` | Default; strong visual reasoning, 256K ctx |
+| `qwen-vl-max` | Alibaba DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1` | Larger context (1M), reliable |
+| `gpt-4o` | OpenAI | `https://api.openai.com/v1` | Best accuracy, higher cost |
+| `claude-opus-4-5` | Anthropic (via OpenRouter) | `https://openrouter.ai/api/v1` | Strong reasoning |
+
+Set your API key as an environment variable:
+
+```bash
+# DashScope (Alibaba Cloud — China accessible)
+export OPENAI_API_KEY=sk-...
+
+# OpenAI
+export OPENAI_API_KEY=sk-...
+
+# Anthropic via OpenRouter
+export OPENAI_API_KEY=<openrouter_key>
+```
+
+---
+
+## CLI Reference
+
+```
+agent_s [options] [--task "instruction"]
+
+Core options:
+  --provider        API provider type (default: openai)
+  --model           Model ID (default: gpt-5-2025-08-07)
+  --model_url       Base URL for the API
+  --model_api_key   API key (or set via OPENAI_API_KEY env var)
+
+DirectACI (single-model mode):
+  --direct          Use one model for both reasoning and grounding
+                    (all --ground_* args become optional)
+
+Standard two-model mode (requires separate grounding server):
+  --ground_provider   Provider for grounding model
+  --ground_url        URL of grounding model server
+  --ground_model      Grounding model ID
+  --grounding_width   Screenshot width for grounding (px)
+  --grounding_height  Screenshot height for grounding (px)
+
+Task options:
+  --task            Task instruction (if omitted, enters interactive loop)
+  --max_trajectory_length  Max screenshot turns to keep (default: 8)
+  --enable_reflection      Enable reflection agent (default: on)
+
+Controls:
+  Ctrl+C            Pause execution
+  Esc               Resume after pause
+  Ctrl+C (x2)       Exit
+```
+
+---
+
+## Project Structure
+
+```
+Agent-S/
+├── gui_agents/
+│   └── s3/                        # Production-ready S3 agent
+│       ├── agents/
+│       │   ├── agent_s.py         # Top-level AgentS3 orchestrator
+│       │   ├── grounding.py       # OSWorldACI + DirectACI (our contribution)
+│       │   └── worker.py          # Generates GUI actions from observations
+│       ├── core/
+│       │   ├── engine.py          # LLM provider backends (OpenAI, Anthropic, ...)
+│       │   └── mllm.py            # Multimodal message history management
+│       └── memory/
+│           └── procedural_memory.py  # Auto-generates system prompt from signatures
+├── openclaw-skill/                # OpenClaw integration (our contribution)
+│   ├── SKILL.md                   # Skill manifest
+│   └── scripts/run_agent_s.py    # Standalone runner script
+├── examples/                      # Usage examples
+└── USAGE.md                       # Full operational guide
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+**Areas where help is most useful:**
+
+- Testing DirectACI with more models (Gemini, Claude, Qwen-VL, etc.)
+- Improving coordinate accuracy for different screen resolutions
+- Additional OpenClaw skill improvements
+- macOS / Linux testing
+- More example scripts
+
+### Development setup
+
+```bash
+git clone https://github.com/jessepwj/Agent-S
+cd Agent-S
+pip install -e ".[dev]"
+black --check gui_agents    # formatting check
+```
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+---
+
+## Credits
+
+AutoAct is built on top of [Agent-S](https://github.com/simular-ai/Agent-S) by [Simular AI](https://simular.ai), which achieved first human-surpassing performance on OSWorld (72.60%).
+
+**Original paper:**
+> Simular Research. *Agent S: An Open Agentic Framework that Uses Computers Like a Human.* ICLR 2025.
+
+Contributions in this fork:
+- **DirectACI** — single-model coordinate grounding (eliminates separate grounding server)
+- **OpenClaw skill** — `agent-s-cua` integration for plug-and-play desktop automation
+- Coordinate normalization for kimi-k2.5, qwen3.5-plus, and UI-TARS output formats
+- Expanded documentation and operational guides
+
+---
+
+## License
+
+[Apache 2.0](LICENSE) — same as the upstream Agent-S project.
