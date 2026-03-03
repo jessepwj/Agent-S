@@ -741,6 +741,23 @@ class DirectACI(OSWorldACI):
         )
 
     # ------------------------------------------------------------------
+    # Coordinate resolution helper (same logic as generate_coords).
+    # Handles three formats the model may output:
+    #   1. float 0.0-1.0  e.g. (0.472, 0.979)  -> kimi-k2.5
+    #   2. int   0-1000   e.g. (467, 983)       -> qwen3.5-plus
+    #   3. int   >1000    e.g. (906, 1061)      -> absolute pixels
+    # ------------------------------------------------------------------
+
+    def _px(self, x, y):
+        """Resolve any coordinate format to absolute pixel coordinates."""
+        x, y = float(x), float(y)
+        if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0:
+            return int(x * self.width), int(y * self.height)
+        if x <= 1000 and y <= 1000:
+            return int(x * self.width / 1000), int(y * self.height / 1000)
+        return int(x), int(y)
+
+    # ------------------------------------------------------------------
     # Override actions that previously required a grounding-model call.
     # Each method now accepts pixel coordinates directly.
     # ------------------------------------------------------------------
@@ -762,10 +779,11 @@ class DirectACI(OSWorldACI):
             button_type:str, mouse button - "left", "middle", or "right"
             hold_keys:List, list of keys to hold while clicking
         """
+        px, py = self._px(x, y)
         command = "import pyautogui; "
         for k in hold_keys:
             command += f"pyautogui.keyDown({repr(k)}); "
-        command += f"import pyautogui; pyautogui.click({x}, {y}, clicks={num_clicks}, button={repr(button_type)}); "
+        command += f"import pyautogui; pyautogui.click({px}, {py}, clicks={num_clicks}, button={repr(button_type)}); "
         for k in hold_keys:
             command += f"pyautogui.keyUp({repr(k)}); "
         return command
@@ -798,7 +816,8 @@ class DirectACI(OSWorldACI):
             "    import pyperclip\n\n"
         )
         if x is not None and y is not None:
-            command += f"pyautogui.click({x}, {y}); "
+            px, py = self._px(x, y)
+            command += f"pyautogui.click({px}, {py}); "
         if overwrite:
             command += (
                 f"pyautogui.hotkey({repr('command' if self.platform == 'darwin' else 'ctrl')}, 'a'); "
@@ -823,10 +842,11 @@ class DirectACI(OSWorldACI):
             clicks:int, scroll amount - positive (up) or negative (down)
             shift:bool, True for horizontal scrolling
         """
+        px, py = self._px(x, y)
         if shift:
-            return f"import pyautogui; import time; pyautogui.moveTo({x}, {y}); time.sleep(0.5); pyautogui.hscroll({clicks})"
+            return f"import pyautogui; import time; pyautogui.moveTo({px}, {py}); time.sleep(0.5); pyautogui.hscroll({clicks})"
         else:
-            return f"import pyautogui; import time; pyautogui.moveTo({x}, {y}); time.sleep(0.5); pyautogui.vscroll({clicks})"
+            return f"import pyautogui; import time; pyautogui.moveTo({px}, {py}); time.sleep(0.5); pyautogui.vscroll({clicks})"
 
     @agent_action
     def drag_and_drop(
@@ -845,11 +865,13 @@ class DirectACI(OSWorldACI):
             end_y:int, y pixel coordinate of drag end
             hold_keys:List, list of keys to hold while dragging
         """
+        px1, py1 = self._px(start_x, start_y)
+        px2, py2 = self._px(end_x, end_y)
         command = "import pyautogui; "
-        command += f"pyautogui.moveTo({start_x}, {start_y}); "
+        command += f"pyautogui.moveTo({px1}, {py1}); "
         for k in hold_keys:
             command += f"pyautogui.keyDown({repr(k)}); "
-        command += f"pyautogui.dragTo({end_x}, {end_y}, duration=1., button='left'); pyautogui.mouseUp(); "
+        command += f"pyautogui.dragTo({px2}, {py2}, duration=1., button='left'); pyautogui.mouseUp(); "
         for k in hold_keys:
             command += f"pyautogui.keyUp({repr(k)}); "
         return command
@@ -866,7 +888,9 @@ class DirectACI(OSWorldACI):
             y2:int, y pixel coordinate of selection end
             button:str, mouse button to use - "left", "right", or "middle"
         """
+        px1, py1 = self._px(x1, y1)
+        px2, py2 = self._px(x2, y2)
         command = "import pyautogui; "
-        command += f"pyautogui.moveTo({x1}, {y1}); "
-        command += f"pyautogui.dragTo({x2}, {y2}, duration=1., button='{button}'); pyautogui.mouseUp(); "
+        command += f"pyautogui.moveTo({px1}, {py1}); "
+        command += f"pyautogui.dragTo({px2}, {py2}, duration=1., button='{button}'); pyautogui.mouseUp(); "
         return command
