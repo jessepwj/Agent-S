@@ -240,6 +240,13 @@ class OSWorldACI(ACI):
         # Generate and parse coordinates
         response = call_llm_safe(self.grounding_model)
         print("RAW GROUNDING MODEL RESPONSE:", response)
+        # Support both normalized floats (0.0-1.0) and absolute pixel integers
+        floats = re.findall(r"\d+\.\d+", response)
+        if len(floats) >= 2:
+            fx, fy = float(floats[0]), float(floats[1])
+            if 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0:
+                return [int(fx * self.width), int(fy * self.height)]
+            return [int(fx), int(fy)]
         numericals = re.findall(r"\d+", response)
         assert len(numericals) >= 2
         return [int(numericals[0]), int(numericals[1])]
