@@ -27,27 +27,43 @@ pip install -e .
 
 ---
 
-## 架构说明：为什么需要两个模型
+## 架构说明
 
-Agent-S 把任务拆成两步，分给两个模型：
+### 经典双模型模式
+
+Agent-S 原始设计把任务拆成两步，分给两个模型：
 
 ```
 主模型（Worker）
   接收：截图 + 任务描述 + 历史操作
-  输出：agent.click("微信图标")  ← 自然语言描述，不是坐标
+  输出：agent.click("微信图标")  <- 自然语言描述，不是坐标
 
-        ↓
+        v  (第二次 API 调用)
 
 Grounding 模型
   接收：截图 + "微信图标"
-  输出：(906, 1049)  ← 像素坐标
+  输出：(906, 1049)  <- 像素坐标
 
-        ↓
+        v
 
-pyautogui.click(906, 1049)  ← 真正执行
+pyautogui.click(906, 1049)  <- 真正执行
 ```
 
-**可以用同一个模型兼任两个角色**（见下方启动命令），只要该模型支持图片输入即可。
+### 单模型直出模式（推荐：--direct）
+
+kimi-k2.5 等强推理模型同时具备视觉理解和坐标定位能力，可以一步到位，**省去第二次 API 调用**：
+
+```
+kimi-k2.5（单模型）
+  接收：截图 + 任务描述 + 历史操作
+  输出：agent.click(906, 1049)  <- 直接给出像素坐标
+
+        v
+
+pyautogui.click(906, 1049)  <- 真正执行
+```
+
+启动时加 `--direct` 参数即可，无需配置任何 Grounding 模型参数。
 
 ---
 
@@ -71,9 +87,25 @@ API Key  : （填写你的 key）
 
 ## 启动命令
 
-### 用 kimi-k2.5（推荐）
+### 单模型直出模式（推荐，--direct）
+
+只需要一个模型，每步仅调用一次 API，参数最简单：
 
 ```bash
+agent_s \
+  --direct \
+  --provider openai \
+  --model kimi-k2.5 \
+  --model_url https://coding.dashscope.aliyuncs.com/v1 \
+  --model_api_key <YOUR_KEY>
+```
+
+### 双模型模式（经典）
+
+主模型负责推理，Grounding 模型负责坐标定位：
+
+```bash
+# kimi-k2.5 兼任两个角色
 agent_s \
   --provider openai \
   --model kimi-k2.5 \
@@ -85,11 +117,8 @@ agent_s \
   --ground_api_key <YOUR_KEY> \
   --grounding_width 1920 \
   --grounding_height 1080
-```
 
-### 用 qwen3.5-plus
-
-```bash
+# qwen3.5-plus 兼任两个角色（主模型推理 + grounding 定位）
 agent_s \
   --provider openai \
   --model qwen3.5-plus \
@@ -109,11 +138,11 @@ agent_s \
 import io, pyautogui
 from PIL import Image
 from gui_agents.s3.agents.agent_s import AgentS3
-from gui_agents.s3.agents.grounding import OSWorldACI
+from gui_agents.s3.agents.grounding import DirectACI  # 单模型直出
 
 BASE_URL = "https://coding.dashscope.aliyuncs.com/v1"
 API_KEY  = "<YOUR_KEY>"
-MODEL    = "kimi-k2.5"   # 或 "qwen3.5-plus"
+MODEL    = "kimi-k2.5"
 
 engine_params = {
     "engine_type": "openai",
@@ -121,17 +150,11 @@ engine_params = {
     "base_url": BASE_URL,
     "api_key": API_KEY,
 }
-engine_params_grounding = {
-    **engine_params,
-    "grounding_width": 1920,
-    "grounding_height": 1080,
-}
 
-grounding_agent = OSWorldACI(
+grounding_agent = DirectACI(
     env=None,
-    platform="windows",          # "darwin" / "linux"
-    engine_params_for_generation=engine_params,
-    engine_params_for_grounding=engine_params_grounding,
+    platform="windows",   # "darwin" / "linux"
+    engine_params=engine_params,
     width=1920,
     height=1080,
 )
@@ -242,8 +265,10 @@ Agent-S 仅支持单显示器，多屏环境下截图和坐标会出问题。
 
 ### Q：任务执行时模型调用了几次 API
 
-每个需要点击的步骤会调用 **2次** API：
+**--direct 模式**：每步固定 **1次** API 调用，模型直接输出坐标。
+
+**双模型模式**：每个需要点击/滚动/拖拽的步骤调用 **2次** API：
 1. 主模型决策（输出 `agent.click("描述")`）
 2. Grounding 模型定位（输出坐标）
 
-纯键盘操作（`hotkey`、`type`）只调用 1次。
+纯键盘操作（`hotkey`、`type` 无坐标）在任何模式下都只调用 1次。

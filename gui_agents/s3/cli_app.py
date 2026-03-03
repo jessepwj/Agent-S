@@ -11,7 +11,7 @@ import time
 
 from PIL import Image
 
-from gui_agents.s3.agents.grounding import OSWorldACI
+from gui_agents.s3.agents.grounding import OSWorldACI, DirectACI
 from gui_agents.s3.agents.agent_s import AgentS3
 from gui_agents.s3.utils.local_env import LocalEnv
 
@@ -258,18 +258,30 @@ def main():
         help="Temperature to fix the generation model at (e.g. o3 can only be run with 1.0)",
     )
 
-    # Grounding model config: Self-hosted endpoint based (required)
+    # Direct mode: single model for both reasoning and visual grounding
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        default=False,
+        help=(
+            "Use a single model for both reasoning and coordinate grounding. "
+            "The main model outputs pixel coordinates directly from the screenshot. "
+            "When set, all --ground_* arguments are ignored."
+        ),
+    )
+
+    # Grounding model config: required unless --direct is used
     parser.add_argument(
         "--ground_provider",
         type=str,
-        required=True,
-        help="The provider for the grounding model",
+        default=None,
+        help="The provider for the grounding model (not needed with --direct)",
     )
     parser.add_argument(
         "--ground_url",
         type=str,
-        required=True,
-        help="The URL of the grounding model",
+        default=None,
+        help="The URL of the grounding model (not needed with --direct)",
     )
     parser.add_argument(
         "--ground_api_key",
@@ -280,20 +292,20 @@ def main():
     parser.add_argument(
         "--ground_model",
         type=str,
-        required=True,
-        help="The model name for the grounding model",
+        default=None,
+        help="The model name for the grounding model (not needed with --direct)",
     )
     parser.add_argument(
         "--grounding_width",
         type=int,
-        required=True,
-        help="Width of screenshot image after processor rescaling",
+        default=None,
+        help="Width of screenshot image after processor rescaling (not needed with --direct)",
     )
     parser.add_argument(
         "--grounding_height",
         type=int,
-        required=True,
-        help="Height of screenshot image after processor rescaling",
+        default=None,
+        help="Height of screenshot image after processor rescaling (not needed with --direct)",
     )
 
     # AgentS3 specific arguments
@@ -323,6 +335,25 @@ def main():
 
     args = parser.parse_args()
 
+    # Validate: grounding params are required unless --direct is used
+    if not args.direct:
+        missing = [
+            name
+            for name, val in [
+                ("--ground_provider", args.ground_provider),
+                ("--ground_url", args.ground_url),
+                ("--ground_model", args.ground_model),
+                ("--grounding_width", args.grounding_width),
+                ("--grounding_height", args.grounding_height),
+            ]
+            if val is None
+        ]
+        if missing:
+            parser.error(
+                f"The following arguments are required unless --direct is used: "
+                f"{', '.join(missing)}"
+            )
+
     # Re-scales screenshot size to ensure it fits in UI-TARS context limit
     screen_width, screen_height = pyautogui.size()
     scaled_width, scaled_height = scale_screen_dimensions(
@@ -338,16 +369,6 @@ def main():
         "temperature": getattr(args, "model_temperature", None),
     }
 
-    # Load the grounding engine from a custom endpoint
-    engine_params_for_grounding = {
-        "engine_type": args.ground_provider,
-        "model": args.ground_model,
-        "base_url": args.ground_url,
-        "api_key": args.ground_api_key,
-        "grounding_width": args.grounding_width,
-        "grounding_height": args.grounding_height,
-    }
-
     # Initialize environment based on user preference
     local_env = None
     if args.enable_local_env:
@@ -356,14 +377,34 @@ def main():
         )
         local_env = LocalEnv()
 
-    grounding_agent = OSWorldACI(
-        env=local_env,
-        platform=current_platform,
-        engine_params_for_generation=engine_params,
-        engine_params_for_grounding=engine_params_for_grounding,
-        width=screen_width,
-        height=screen_height,
-    )
+    if args.direct:
+        # Single-model mode: main model handles both reasoning and coordinate grounding
+        print(f"[Direct mode] Single model: {args.model} (no separate grounding model)")
+        grounding_agent = DirectACI(
+            env=local_env,
+            platform=current_platform,
+            engine_params=engine_params,
+            width=screen_width,
+            height=screen_height,
+        )
+    else:
+        # Two-model mode: separate grounding model for coordinate generation
+        engine_params_for_grounding = {
+            "engine_type": args.ground_provider,
+            "model": args.ground_model,
+            "base_url": args.ground_url,
+            "api_key": args.ground_api_key,
+            "grounding_width": args.grounding_width,
+            "grounding_height": args.grounding_height,
+        }
+        grounding_agent = OSWorldACI(
+            env=local_env,
+            platform=current_platform,
+            engine_params_for_generation=engine_params,
+            engine_params_for_grounding=engine_params_for_grounding,
+            width=screen_width,
+            height=screen_height,
+        )
 
     agent = AgentS3(
         engine_params,

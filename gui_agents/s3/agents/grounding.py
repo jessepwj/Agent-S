@@ -702,3 +702,171 @@ class OSWorldACI(ACI):
     def fail(self):
         """End the current task with a failure. Use this when you believe the entire task is impossible to complete."""
         return """FAIL"""
+
+
+class DirectACI(OSWorldACI):
+    """Single-model ACI variant: the Worker model sees the screenshot and outputs
+    pixel coordinates directly.  No separate grounding-model API call is made.
+
+    Use this when your main model (e.g. kimi-k2.5) is capable of both reasoning
+    *and* visual grounding, so a second round-trip for coordinate generation is
+    unnecessary.
+    """
+
+    def __init__(
+        self,
+        env,
+        platform: str,
+        engine_params: Dict,
+        width: int = 1920,
+        height: int = 1080,
+        code_agent_budget: int = 20,
+        code_agent_engine_params: Dict = None,
+    ):
+        # Grounding model won't be called; pass main params as placeholder.
+        engine_params_for_grounding = {
+            **engine_params,
+            "grounding_width": width,
+            "grounding_height": height,
+        }
+        super().__init__(
+            env=env,
+            platform=platform,
+            engine_params_for_generation=engine_params,
+            engine_params_for_grounding=engine_params_for_grounding,
+            width=width,
+            height=height,
+            code_agent_budget=code_agent_budget,
+            code_agent_engine_params=code_agent_engine_params,
+        )
+
+    # ------------------------------------------------------------------
+    # Override actions that previously required a grounding-model call.
+    # Each method now accepts pixel coordinates directly.
+    # ------------------------------------------------------------------
+
+    @agent_action
+    def click(
+        self,
+        x: int,
+        y: int,
+        num_clicks: int = 1,
+        button_type: str = "left",
+        hold_keys: List = [],
+    ):
+        """Click at the specified pixel coordinate on screen.
+        Args:
+            x:int, the x pixel coordinate to click (read from the screenshot)
+            y:int, the y pixel coordinate to click (read from the screenshot)
+            num_clicks:int, number of times to click
+            button_type:str, mouse button - "left", "middle", or "right"
+            hold_keys:List, list of keys to hold while clicking
+        """
+        command = "import pyautogui; "
+        for k in hold_keys:
+            command += f"pyautogui.keyDown({repr(k)}); "
+        command += f"import pyautogui; pyautogui.click({x}, {y}, clicks={num_clicks}, button={repr(button_type)}); "
+        for k in hold_keys:
+            command += f"pyautogui.keyUp({repr(k)}); "
+        return command
+
+    @agent_action
+    def type(
+        self,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        text: str = "",
+        overwrite: bool = False,
+        enter: bool = False,
+    ):
+        """Type text, optionally clicking a coordinate first.
+        Args:
+            x:int, x pixel coordinate to click before typing (omit to type at current focus)
+            y:int, y pixel coordinate to click before typing (omit to type at current focus)
+            text:str, the text to type
+            overwrite:bool, True to clear existing text first
+            enter:bool, True to press Enter after typing
+        """
+        command = "import pyautogui; "
+        command += (
+            "\ntry:\n"
+            "    import pyperclip\n"
+            "except ImportError:\n"
+            "    import subprocess\n"
+            "    subprocess.run('echo \"osworld-public-evaluation\" | sudo -S apt-get install -y xclip xsel', shell=True, check=True)\n"
+            "    subprocess.check_call([subprocess.sys.executable, '-m', 'pip', 'install', 'pyperclip'])\n"
+            "    import pyperclip\n\n"
+        )
+        if x is not None and y is not None:
+            command += f"pyautogui.click({x}, {y}); "
+        if overwrite:
+            command += (
+                f"pyautogui.hotkey({repr('command' if self.platform == 'darwin' else 'ctrl')}, 'a'); "
+                "pyautogui.press('backspace'); "
+            )
+        has_unicode = any(ord(char) > 127 for char in text)
+        if has_unicode:
+            command += f"pyperclip.copy({repr(text)}); "
+            command += f"pyautogui.hotkey({repr('command' if self.platform == 'darwin' else 'ctrl')}, 'v'); "
+        else:
+            command += f"pyautogui.write({repr(text)}); "
+        if enter:
+            command += "pyautogui.press('enter'); "
+        return command
+
+    @agent_action
+    def scroll(self, x: int, y: int, clicks: int, shift: bool = False):
+        """Scroll at the specified pixel coordinate.
+        Args:
+            x:int, x pixel coordinate to scroll at
+            y:int, y pixel coordinate to scroll at
+            clicks:int, scroll amount - positive (up) or negative (down)
+            shift:bool, True for horizontal scrolling
+        """
+        if shift:
+            return f"import pyautogui; import time; pyautogui.moveTo({x}, {y}); time.sleep(0.5); pyautogui.hscroll({clicks})"
+        else:
+            return f"import pyautogui; import time; pyautogui.moveTo({x}, {y}); time.sleep(0.5); pyautogui.vscroll({clicks})"
+
+    @agent_action
+    def drag_and_drop(
+        self,
+        start_x: int,
+        start_y: int,
+        end_x: int,
+        end_y: int,
+        hold_keys: List = [],
+    ):
+        """Drag from one pixel coordinate to another.
+        Args:
+            start_x:int, x pixel coordinate of drag start
+            start_y:int, y pixel coordinate of drag start
+            end_x:int, x pixel coordinate of drag end
+            end_y:int, y pixel coordinate of drag end
+            hold_keys:List, list of keys to hold while dragging
+        """
+        command = "import pyautogui; "
+        command += f"pyautogui.moveTo({start_x}, {start_y}); "
+        for k in hold_keys:
+            command += f"pyautogui.keyDown({repr(k)}); "
+        command += f"pyautogui.dragTo({end_x}, {end_y}, duration=1., button='left'); pyautogui.mouseUp(); "
+        for k in hold_keys:
+            command += f"pyautogui.keyUp({repr(k)}); "
+        return command
+
+    @agent_action
+    def highlight_text_span(
+        self, x1: int, y1: int, x2: int, y2: int, button: str = "left"
+    ):
+        """Highlight text by dragging from (x1, y1) to (x2, y2).
+        Args:
+            x1:int, x pixel coordinate of selection start
+            y1:int, y pixel coordinate of selection start
+            x2:int, x pixel coordinate of selection end
+            y2:int, y pixel coordinate of selection end
+            button:str, mouse button to use - "left", "right", or "middle"
+        """
+        command = "import pyautogui; "
+        command += f"pyautogui.moveTo({x1}, {y1}); "
+        command += f"pyautogui.dragTo({x2}, {y2}, duration=1., button='{button}'); pyautogui.mouseUp(); "
+        return command
